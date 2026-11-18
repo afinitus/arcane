@@ -35,91 +35,6 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-install_docker() {
-    local platform arch
-    platform="$(uname -s | tr '[:upper:]' '[:lower:]')"
-    arch="$(uname -m)"
-    
-    log_info "Installing Docker using download script..."
-    if ! "${SCRIPT_DIR}/download-docker.sh" "$platform" "$arch" "28.4.0"; then
-        log_error "Failed to install Docker"
-        return 1
-    fi
-    
-    # Add to PATH for current session
-    export PATH="${PROJECT_ROOT}/dist:$PATH"
-    log_success "Docker installed successfully"
-    return 0
-}
-
-install_compose() {
-    local dest="${PROJECT_ROOT}/dist/docker-compose"
-    
-    log_info "Installing Docker Compose using download script..."
-    if ! "${SCRIPT_DIR}/download-compose.sh" "2.39.2" "$dest"; then
-        log_error "Failed to install Docker Compose"
-        return 1
-    fi
-    
-    # Add to PATH for current session
-    export PATH="${PROJECT_ROOT}/dist:$PATH"
-    log_success "Docker Compose installed successfully"
-    return 0
-}
-
-offer_installation() {
-    local missing_tools=()
-    local install_docker=false
-    local install_compose=false
-    
-    # Check what's missing
-    if ! command -v docker &> /dev/null; then
-        missing_tools+=("Docker")
-        install_docker=true
-    fi
-    
-    if ! docker compose version &> /dev/null 2>&1; then
-        missing_tools+=("Docker Compose")
-        install_compose=true
-    fi
-    
-    if [[ ${#missing_tools[@]} -eq 0 ]]; then
-        return 0
-    fi
-    
-    log_warning "Missing required tools: ${missing_tools[*]}"
-    echo
-    log_info "We can automatically install these tools for you using the project's download scripts."
-    log_info "The tools will be installed locally in the project directory (${PROJECT_ROOT}/dist/)"
-    echo
-    
-    read -p "Would you like to install the missing tools automatically? (y/N): " -n 1 -r
-    echo
-    
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Installation cancelled."
-        log_info "Please install Docker and Docker Compose manually, then run this script again."
-        return 1
-    fi
-    
-    # Install missing tools
-    if [[ $install_docker == true ]]; then
-        if ! install_docker; then
-            return 1
-        fi
-    fi
-    
-    if [[ $install_compose == true ]]; then
-        if ! install_compose; then
-            return 1
-        fi
-    fi
-    
-    log_success "All required tools installed successfully!"
-    echo
-    return 0
-}
-
 check_requirements() {
     local docker_available=true
     local daemon_running=true
@@ -140,22 +55,15 @@ check_requirements() {
         compose_available=false
     fi
     
-    # If Docker or Compose are missing, offer installation
+    if [[ $docker_available == false ]]; then
+        log_error "Docker is not installed or not in PATH"
+    fi
+    if [[ $compose_available == false ]]; then
+        log_error "Docker Compose is not installed or not in PATH"
+    fi
     if [[ $docker_available == false ]] || [[ $compose_available == false ]]; then
-        if ! offer_installation; then
-            exit 1
-        fi
-        
-        # Re-check after installation
-        if ! command -v docker &> /dev/null; then
-            log_error "Docker installation failed or is not in PATH"
-            exit 1
-        fi
-        
-        if ! docker compose version &> /dev/null; then
-            log_error "Docker Compose installation failed or is not in PATH"
-            exit 1
-        fi
+        log_error "Please install Docker and Docker Compose, then run this script again"
+        exit 1
     fi
     
     # Check Docker daemon (after ensuring Docker is installed)
@@ -707,7 +615,6 @@ show_help() {
     echo "  help      Show this help message"
     echo
     echo "Features:"
-    echo "  • Automatic Docker/Compose installation if missing (using project scripts)"
     echo "  • Hot reload for both frontend (Vite) and backend (Air)"
     echo "  • Persistent Go build caches for faster incremental builds"
     echo "  • Interactive cache management with clear guidance"
@@ -720,9 +627,6 @@ show_help() {
     echo "  $0 env backend"
     echo "  $0 logs backend"
     echo "  $0 shell frontend"
-    echo
-    echo "Note: If Docker or Docker Compose are not installed, you'll be prompted"
-    echo "      to install them automatically using the project's download scripts."
 }
 
 # Main script logic

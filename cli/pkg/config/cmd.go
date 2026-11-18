@@ -125,14 +125,14 @@ func newConfigSetCmd() *cobra.Command {
 Preferred syntax (key/value pairs):
 
 Examples:
-	arcane config set server-url http://localhost:3553
+	arcane config set server-url http://localhost:3552
 	arcane config set api-key arc_xxxxxxxxxxxxx
 	arcane config set pagination.default.limit 25
 	arcane config set pagination.resources.images.limit 100
-	arcane config set server-url http://localhost:3553 api-key arc_xxxxxxxxxxxxx
+	arcane config set server-url http://localhost:3552 api-key arc_xxxxxxxxxxxxx
 
 Legacy flag syntax (flags shown below) is still supported:
-	arcane config set --server-url http://localhost:3553
+	arcane config set --server-url http://localhost:3552
 	arcane config set --api-key arc_xxxxxxxxxxxxx
 	arcane auth login
 	arcane config set --jwt-token eyJhbGciOi...`,
@@ -211,7 +211,7 @@ Legacy flag syntax (flags shown below) is still supported:
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&opts.serverURL, "server-url", "", "Arcane server URL (e.g., http://localhost:3553)")
+	cmd.Flags().StringVar(&opts.serverURL, "server-url", "", "Arcane server URL (e.g., http://localhost:3552)")
 	cmd.Flags().StringVar(&opts.apiKey, "api-key", "", "API key for authentication")
 	cmd.Flags().StringVar(&opts.jwtToken, "jwt-token", "", "JWT access token for authentication (Bearer token)")
 	cmd.Flags().StringVar(&opts.federatedAudience, "federated-audience", "", "Default audience for federated authentication")

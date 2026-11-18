@@ -39,6 +39,9 @@ func generateSecrets(cmd *cobra.Command, secretFormat string, secretLength int) 
 	if !slices.Contains(secretFormats, secretFormat) {
 		return fmt.Errorf("unknown format: %s (supported: %s)", secretFormat, strings.Join(secretFormats, ", "))
 	}
+	if secretLength <= 0 {
+		return fmt.Errorf("invalid length: %d (must be a positive number of bytes)", secretLength)
+	}
 	w := cmd.OutOrStdout()
 	encryptionKey := make([]byte, secretLength)
 	if _, err := rand.Read(encryptionKey); err != nil {
